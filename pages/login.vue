@@ -35,8 +35,8 @@ import bcryptjs from "bcryptjs";
 
 const { setUser } = useAuth();
 const supabase = useSupabaseClient<Admin>();
-const email = ref("tostov@super.com");
-const password = ref("j3EZknF1U1x7YK");
+const email = ref("");
+const password = ref("");
 const errorMessage = ref("");
 const isLoading = ref(false);
 

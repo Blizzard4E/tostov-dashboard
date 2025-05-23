@@ -21,13 +21,14 @@
 			</p>
 		</div>
 		<Table v-else>
-			<TableCaption>A list of locations.</TableCaption>
+			<TableCaption>A list of locations with their tags.</TableCaption>
 			<TableHeader>
 				<TableRow>
 					<TableHead class="w-16">ID</TableHead>
 					<TableHead>Name (EN)</TableHead>
 					<TableHead>Name (KM)</TableHead>
 					<TableHead>Category</TableHead>
+					<TableHead class="w-48">Tags</TableHead>
 					<TableHead class="w-32">Options</TableHead>
 				</TableRow>
 			</TableHeader>
@@ -39,6 +40,23 @@
 					<TableCell>{{
 						location.category?.name_en || "N/A"
 					}}</TableCell>
+					<TableCell>
+						<div
+							v-if="location.tags && location.tags.length > 0"
+							class="flex flex-wrap gap-1"
+						>
+							<span
+								v-for="tag in location.tags"
+								:key="tag.id"
+								class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+							>
+								#{{ tag.name }}
+							</span>
+						</div>
+						<span v-else class="text-gray-400 text-sm"
+							>No tags</span
+						>
+					</TableCell>
 					<TableCell>
 						<div class="flex gap-2">
 							<LocationEdit
@@ -67,7 +85,7 @@ if (!user.value) {
 	router.push("/");
 }
 
-// Fetch locations with category information
+// Fetch locations with category information and tags
 const {
 	data: locations,
 	status: locationsStatus,
@@ -75,7 +93,17 @@ const {
 } = useAsyncData("locations", async () => {
 	const { data, error } = await supabase
 		.from("locations")
-		.select("id, name_en, name_km, category:category_id(name_en)")
+		.select(
+			`
+            id, 
+            name_en, 
+            name_km, 
+            category:category_id(name_en),
+            location_tags(
+                tags(id, name)
+            )
+        `
+		)
 		.order("created_at", { ascending: false });
 
 	if (error) {
@@ -83,6 +111,13 @@ const {
 		return [];
 	}
 
-	return data;
+	// Transform the data to flatten the tags structure
+	const transformedData =
+		data?.map((location) => ({
+			...location,
+			tags: location.location_tags?.map((lt) => lt.tags) || [],
+		})) || [];
+
+	return transformedData;
 });
 </script>

@@ -6,6 +6,12 @@
 	</div>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+const { user } = useAuth();
+const router = useRouter();
+if (!user.value) {
+	router.push("/login");
+}
+</script>
 
 <style></style>
